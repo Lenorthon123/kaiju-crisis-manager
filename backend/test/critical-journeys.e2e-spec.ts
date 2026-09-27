@@ -6,7 +6,7 @@ import {
   setCatastropheLevel,
   setStock,
 } from './helpers/app';
-import { Officer, asCD, asLC, asQC, expectViolation, login } from './helpers/client';
+import { asCD, asLC, asQC, expectViolation } from './helpers/client';
 import { TEST_PASSWORD } from './helpers/app';
 import request from 'supertest';
 

@@ -1,7 +1,7 @@
 import request from 'supertest';
 import { TestContext, TEST_PASSWORD } from './app';
 
-export interface ApiError {
+interface ApiError {
   statusCode: number;
   code: string;
   message: string;

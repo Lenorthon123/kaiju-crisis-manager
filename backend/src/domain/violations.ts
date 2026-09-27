@@ -35,7 +35,7 @@ export const ViolationCode = {
 
 export type ViolationCode = (typeof ViolationCode)[keyof typeof ViolationCode];
 
-export const VIOLATION_HTTP_STATUS: Record<ViolationCode, number> = {
+const VIOLATION_HTTP_STATUS: Record<ViolationCode, number> = {
   ROLE_NOT_PERMITTED_AT_LEVEL: 403,
   OUT_OF_SCOPE_QUARTER: 403,
   QC_WITHOUT_QUARTER: 403,

@@ -58,7 +58,7 @@ export const REFERENCE_PERMISSION_MATRIX: PermissionMatrix = {
   },
 };
 
-export function rolesFor(
+function rolesFor(
   matrix: PermissionMatrix,
   action: ActionKey,
   level: CatastropheLevel,

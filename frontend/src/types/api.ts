@@ -7,14 +7,6 @@ export type CatastropheLevel = 1 | 2 | 3 | 4 | 5;
 export type TransferMode = 'DIRECT' | 'TRANSIT' | 'MARITIME';
 export type LinkType = 'LAND' | 'SEA';
 
-export type ActionKey =
-  | 'VIEW_RESOURCES'
-  | 'RESERVE_OWN_QUARTER'
-  | 'REQUEST_ADJACENT_TRANSFER'
-  | 'ORGANIZE_TRANSIT'
-  | 'REQUISITION'
-  | 'LOWER_RETENTION_THRESHOLD';
-
 export interface AuthUser {
   id: string;
   email: string;

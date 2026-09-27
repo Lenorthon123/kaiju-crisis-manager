@@ -1,5 +1,5 @@
 import { HttpException } from '@nestjs/common';
-import { RuleResult, RuleViolation } from '../../domain';
+import { RuleViolation } from '../../domain';
 
 export class RuleViolationException extends HttpException {
   constructor(public readonly violation: RuleViolation) {
@@ -13,9 +13,4 @@ export class RuleViolationException extends HttpException {
       violation.httpStatus,
     );
   }
-}
-
-export function unwrap<T>(result: RuleResult<T>): T {
-  if (result.ok) return result.value;
-  throw new RuleViolationException(result.violation);
 }

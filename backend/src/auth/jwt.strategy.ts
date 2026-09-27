@@ -5,7 +5,7 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthenticatedUser } from './authenticated-user';
 
-export interface JwtPayload {
+interface JwtPayload {
   sub: string;
   email: string;
   role: 'QC' | 'LC' | 'CD';

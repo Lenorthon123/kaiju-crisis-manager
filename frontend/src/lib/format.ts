@@ -1,4 +1,4 @@
-import type { CatastropheLevel, TransferStatus } from '../types/api';
+import type { TransferStatus } from '../types/api';
 
 export const LEVEL_NAMES: Record<number, string> = {
   1: 'Watch',
@@ -69,6 +69,3 @@ export const formatShort = (iso: string | null): string => {
 
 export const formatTime = (iso: string): string =>
   new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-
-export const levelName = (level: CatastropheLevel | number): string =>
-  LEVEL_NAMES[level] ?? `Level ${level}`;
