@@ -77,7 +77,7 @@ déployée.
 
 ```bash
 cd backend
-npm test                        # moteur de règles — 61 tests, sans base de données
+npm test                        # moteur de règles — 75 tests, sans base de données
 npm run test:e2e                # e2e — monte sa propre base jetable via Docker
 npm run test:all                # les deux
 ```
