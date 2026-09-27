@@ -1,0 +1,17 @@
+server {
+    listen       ${PORT};
+    server_name  _;
+    root         /usr/share/nginx/html;
+
+    # Fingerprinted filenames, so they can be cached forever.
+    location /assets/ {
+        expires    1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Only React Router knows what /transfers is. Hand back index.html instead
+    # of a 404, or a refresh anywhere but the root breaks the app.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
