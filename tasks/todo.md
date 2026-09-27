@@ -12,6 +12,8 @@
 - [x] Frontend : build de production, rendu vérifié par captures
 - [x] Dépôt Git initialisé et commité
 
+- [x] Nettoyage du code mort, `noUnusedLocals` activé (commit `a6556f1`)
+
 ## Livrables du sujet
 - [x] 1. Dépôt Git avec le code complet
 - [x] 2. Diagramme entité-relation commité (`docs/erd.md`)
