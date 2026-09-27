@@ -22,13 +22,26 @@ const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? 'Kaiju!2026';
 
 async function main() {
   // Boot-time seeding passes this flag: wiping a live database on every restart
-  // would be a Thanos snap, not a deployment.
+  // would be a Thanos snap, not a deployment. The question is whether the
+  // reference data is COMPLETE, not whether some rows happen to exist — a
+  // half-seeded database is exactly the one that still needs seeding.
   if (process.env.SEED_ONLY_IF_EMPTY === 'true') {
-    const existing = await prisma.district.count();
-    if (existing > 0) {
-      console.log(`Database already holds ${existing} districts — seed skipped.`);
+    const [districts, resources, users] = await Promise.all([
+      prisma.district.count(),
+      prisma.resourceType.count(),
+      prisma.user.count(),
+    ]);
+    const complete =
+      districts === DISTRICTS.length && resources === RESOURCES.length && users > 0;
+    if (complete) {
+      console.log(
+        `Reference data already complete (${districts} districts, ${resources} resources, ${users} officers) — seed skipped.`,
+      );
       return;
     }
+    console.log(
+      `Reference data incomplete (${districts}/${DISTRICTS.length} districts, ${resources}/${RESOURCES.length} resources, ${users} officers) — seeding.`,
+    );
   }
 
   console.log('> Resetting operational tables');

@@ -69,14 +69,16 @@ vide toutes les tables avant d'écrire — le lancer à chaque redémarrage
 effacerait les données en pleine soutenance.
 
 Il est donc **optionnel et gardé deux fois** : il ne s'exécute que si la variable
-`SEED_ON_BOOT` vaut `true`, et il ne fait rien si la base contient déjà des
-quartiers. Laisser la variable en place n'a donc aucune conséquence.
+`SEED_ON_BOOT` vaut `true`, et il ne fait rien si les données de référence sont
+déjà **complètes** — cinq quartiers, dix ressources, au moins un officier.
+Laisser la variable en place n'a donc aucune conséquence, et une base à moitié
+semée se répare toute seule au redémarrage suivant.
 
 1. Service `kaiju-api` → **Variables** → `SEED_ON_BOOT` = `true`
 2. Le service redéploie et sème. Les logs affichent `> Districts`,
    `> Topology`, … puis `Seed complete.`
 3. Retirer la variable (facultatif — un second démarrage afficherait seulement
-   `Database already holds 5 districts — seed skipped.`)
+   `Reference data already complete (…) — seed skipped.`)
 
 Pour choisir le mot de passe de démonstration, ajouter `SEED_PASSWORD` avant
 l'étape 1. Sans elle, c'est `Kaiju!2026`.
