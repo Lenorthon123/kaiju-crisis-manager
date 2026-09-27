@@ -19,13 +19,13 @@
 - [x] 2. Diagramme entité-relation commité (`docs/erd.md`)
 - [x] 3. **Application déployée, URL dans le README** — API, interface et base sur Railway
 - [x] 4. Suite de tests e2e couvrant les parcours critiques
-- [ ] 5. Disclosure IA — squelette prêt, sections `[À COMPLÉTER]` à remplir
+- [ ] 5. Disclosure IA — rédigée ; reste la section « ce que je serais capable de réécrire sans assistance »
 
 ## Ce qui reste
 - [x] D11 : la sévérité départage la file des demandes (moteur + tests + registre)
 - [x] Image Docker de l'API : construite, démarrée, migrations jouées, login 200 avec JWT
 - [x] Déploiement : API + front + base sur Railway, URLs dans le README
-- [ ] Remplir `docs/ai-disclosure.md` (les parties de jugement personnel)
+- [ ] `docs/ai-disclosure.md` : compléter la seule section de jugement personnel
 - [ ] Optionnel : tests Playwright de l'interface
 - [ ] Optionnel : ESLint (le script avait été retiré, il était cassé)
 
