@@ -15,7 +15,7 @@
 - [x] Nettoyage du code mort, `noUnusedLocals` activé (commit `a6556f1`)
 
 ## Livrables du sujet
-- [x] 1. Dépôt Git avec le code complet
+- [x] 1. Dépôt Git avec le code complet — https://github.com/Lenorthon123/kaiju-crisis-manager (branche `main`, 130 fichiers)
 - [x] 2. Diagramme entité-relation commité (`docs/erd.md`)
 - [ ] 3. **Application déployée, URL dans le README** — rien de commencé
 - [x] 4. Suite de tests e2e couvrant les parcours critiques
