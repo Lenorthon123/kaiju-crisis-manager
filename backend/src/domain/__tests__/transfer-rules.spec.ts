@@ -2,12 +2,14 @@ import { REFERENCE_GRAPH } from '../topology';
 import { REFERENCE_PERMISSION_MATRIX } from '../permissions';
 import { RETENTION_DEFAULT_PCT, RETENTION_LOWERED_PCT } from '../retention';
 import {
+  compareUrgency,
   evaluateReservation,
   evaluateRetentionOverride,
   evaluateTransfer,
+  QueuedTransfer,
   TransferRequest,
 } from '../transfer-rules';
-import { Actor, CatastropheLevel, DistrictCode, StockSnapshot } from '../types';
+import { Actor, CatastropheLevel, DistrictCode, Severity, StockSnapshot } from '../types';
 import { ViolationCode } from '../violations';
 
 const actor = (role: Actor['role'], districtCode: DistrictCode | null = null): Actor => ({
@@ -333,5 +335,53 @@ describe('retention override', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.violation.code).toBe(ViolationCode.RETENTION_PCT_NOT_ALLOWED);
     expect(call('CD', 5).ok).toBe(true);
+  });
+});
+
+describe('compareUrgency', () => {
+  const queued = (
+    label: string,
+    priority: number,
+    destinationSeverity: Severity,
+    minute: number,
+  ): QueuedTransfer & { label: string } => ({
+    label,
+    priority,
+    destinationSeverity,
+    requestedAt: new Date(Date.UTC(2026, 0, 1, 0, minute)),
+  });
+
+  const order = (queue: (QueuedTransfer & { label: string })[]) =>
+    [...queue].sort(compareUrgency).map((t) => t.label);
+
+  it('never lets severity override the annex rule', () => {
+    const hub = queued('hub-calm', 10, 1, 0);
+    const plain = queued('plain-burning', 50, 5, 0);
+    expect(order([plain, hub])).toEqual(['hub-calm', 'plain-burning']);
+  });
+
+  it('serves the quarter in worse shape first, at equal rank', () => {
+    const calm = queued('calm', 50, 2, 0);
+    const burning = queued('burning', 50, 5, 0);
+    expect(order([calm, burning])).toEqual(['burning', 'calm']);
+  });
+
+  it('falls back on age when rank and severity match', () => {
+    const late = queued('late', 50, 3, 30);
+    const early = queued('early', 50, 3, 5);
+    expect(order([late, early])).toEqual(['early', 'late']);
+  });
+
+  it('gives the same order whatever the input order', () => {
+    const queue = [
+      queued('a', 50, 3, 10),
+      queued('b', 10, 1, 40),
+      queued('c', 50, 5, 20),
+      queued('d', 50, 3, 5),
+      queued('e', 90, 5, 0),
+    ];
+    const expected = ['b', 'c', 'd', 'a', 'e'];
+    expect(order(queue)).toEqual(expected);
+    expect(order([...queue].reverse())).toEqual(expected);
   });
 });

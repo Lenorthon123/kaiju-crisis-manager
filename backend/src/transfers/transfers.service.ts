@@ -10,10 +10,12 @@ import { StockRow, toSnapshot, toView } from '../resources/stock.view';
 import {
   DistrictCode,
   RuleViolation,
+  Severity,
   StockSnapshot,
   TransferDecision,
   ViolationCode,
   availableQuantity,
+  compareUrgency,
   evaluateTransfer,
   neighbours,
   violation,
@@ -37,11 +39,24 @@ interface TransferLegRow {
 
 const TRANSFER_INCLUDE = {
   source: { select: { id: true, code: true } },
-  destination: { select: { id: true, code: true } },
+  destination: { select: { id: true, code: true, severity: true } },
   resourceType: { select: { id: true, code: true, name: true } },
   initiator: { select: { id: true, displayName: true, role: true } },
   legs: { orderBy: { sequence: 'asc' } },
 } as const;
+
+// Severity is read at query time, not frozen into the row: a quarter that
+// escalates has to climb the queue it is already sitting in.
+function byUrgency<T extends { priority: number; requestedAt: Date; destination: { severity: number } }>(
+  transfers: T[],
+): T[] {
+  return [...transfers].sort((a, b) =>
+    compareUrgency(
+      { priority: a.priority, destinationSeverity: a.destination.severity as Severity, requestedAt: a.requestedAt },
+      { priority: b.priority, destinationSeverity: b.destination.severity as Severity, requestedAt: b.requestedAt },
+    ),
+  );
+}
 
 @Injectable()
 export class TransfersService {
@@ -461,7 +476,7 @@ export class TransfersService {
       },
       include: TRANSFER_INCLUDE,
       orderBy: [{ priority: 'asc' }, { requestedAt: 'asc' }],
-    });
+    }).then(byUrgency);
   }
 
   pendingFor(districtCode: string) {
@@ -477,7 +492,7 @@ export class TransfersService {
       },
       include: TRANSFER_INCLUDE,
       orderBy: [{ priority: 'asc' }, { requestedAt: 'asc' }],
-    });
+    }).then(byUrgency);
   }
 
   private scheduleData(etaHours: number) {

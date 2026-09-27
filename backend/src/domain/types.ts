@@ -9,6 +9,11 @@ export type Role = 'QC' | 'LC' | 'CD';
 export type LinkType = 'LAND' | 'SEA';
 export type CatastropheLevel = 1 | 2 | 3 | 4 | 5;
 
+// Same digits, different beast: the level is the city's, severity is a single
+// quarter's. See decisions D1 — merging them makes a transfer between a level-2
+// and a level-4 quarter undecidable.
+export type Severity = 1 | 2 | 3 | 4 | 5;
+
 export type ActionKey =
   | 'VIEW_RESOURCES'
   | 'RESERVE_OWN_QUARTER'

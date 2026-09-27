@@ -13,7 +13,7 @@ couverte par au moins un test unitaire.
 - `CityState.catastropheLevel` (1–5) : **global**, pilote les permissions, diffusé
   en temps réel à chaque escalade ou désescalade.
 - `District.severity` (1–5) : **par quartier**, pilote la couleur de la carte et
-  la priorisation des demandes.
+  départage la file des demandes (voir D11).
 
 **Pourquoi.** L'annexe décrit les cinq niveaux comme un état unique de la ville
 (« Five escalation levels determine which actions and transfers are permitted »),
@@ -114,3 +114,28 @@ de la règle 5 : ce qui ne fait que traverser Xeno attend les besoins de Xeno.
 surplus d'un voisin) à un acteur qui n'avait pas le droit de poser la question.
 Test : `transfer-rules.spec.ts` → « checks the permission before revealing any
 stock figure ».
+
+## D11 — La sévérité départage la file, elle ne la commande pas
+
+**Décision.** L'ordre d'une file de demandes est : `priority` (règle 5 de
+l'annexe) croissant, puis **sévérité du quartier destinataire** décroissante,
+puis ancienneté. La sévérité n'intervient qu'à rang égal, et n'entre nulle part
+ailleurs dans le moteur : ni permission, ni topologie, ni rétention.
+
+**Pourquoi.** C'est une règle **inventée** — l'annexe ne dit rien de la sévérité
+au-delà de « a map reflecting district severity ». Elle est donc cantonnée au
+départage, là où l'annexe ne tranche pas : à rang identique, servir d'abord le
+quartier en détresse est le seul ordre défendable, et laisser l'ordre indécis
+ferait revenir le non-déterminisme corrigé en D9. Une règle ajoutée ne doit
+jamais renverser une règle publiée : c'est pourquoi `priority` reste le premier
+critère, et un transfert impliquant Xeno passe devant un transfert vers un
+quartier en sévérité 5.
+
+**Lecture au moment de la requête, pas figée.** La sévérité n'est pas recopiée
+dans la ligne du transfert : elle est lue à chaque interrogation de la file. Un
+quartier qui s'aggrave remonte donc dans la file où ses demandes attendent déjà.
+`priority`, lui, reste figé à la création, puisqu'il décrit la topologie de la
+route et que celle-ci ne change pas.
+
+Test : `transfer-rules.spec.ts` → « compareUrgency », dont un cas vérifie que
+l'ordre ne dépend pas de l'ordre d'entrée.

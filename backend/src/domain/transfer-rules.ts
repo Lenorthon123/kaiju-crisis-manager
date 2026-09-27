@@ -2,6 +2,7 @@ import {
   ActionKey,
   Actor,
   CatastropheLevel,
+  Severity,
   DEFAULT_TIMING,
   DistrictCode,
   PermissionMatrix,
@@ -294,3 +295,23 @@ export function evaluateRetentionOverride(
 }
 
 export type { RuleViolation };
+
+export interface QueuedTransfer {
+  // Annex rule 5, frozen when the request was made.
+  priority: number;
+  // Read live, so a quarter that escalates moves up the queue it is already in.
+  destinationSeverity: Severity;
+  requestedAt: Date;
+}
+
+// Orders a queue of requests. The annex rule comes first and severity only
+// breaks its ties: an invented rule never overrides a published one. Within the
+// same rank, the quarter on fire is served before the quiet one, and age
+// settles the rest so the order never wobbles between two identical calls.
+export function compareUrgency(a: QueuedTransfer, b: QueuedTransfer): number {
+  if (a.priority !== b.priority) return a.priority - b.priority;
+  if (a.destinationSeverity !== b.destinationSeverity) {
+    return b.destinationSeverity - a.destinationSeverity;
+  }
+  return a.requestedAt.getTime() - b.requestedAt.getTime();
+}

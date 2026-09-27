@@ -146,8 +146,8 @@ export function CityDashboard() {
               <Spinner />
             )}
             <p className="mt-2 text-[11px] text-slate-500">
-              Severity colours the map and prioritises requests. It is not the catastrophe level and
-              does not change anyone's permissions.
+              Severity colours the map and, at equal annex rank, moves a quarter's requests up the
+              queue. It is not the catastrophe level and changes no one's permissions.
             </p>
           </Card>
 
