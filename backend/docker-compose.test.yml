@@ -1,0 +1,19 @@
+# Throwaway PostgreSQL for the e2e suite. tmpfs storage: the database lives in
+# RAM and disappears with the container, so no test run can pollute the next.
+services:
+  kaiju-test-db:
+    image: postgres:16-alpine
+    container_name: kaiju-test-db
+    environment:
+      POSTGRES_USER: kaiju
+      POSTGRES_PASSWORD: kaiju
+      POSTGRES_DB: kaiju_test
+    ports:
+      - '55432:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kaiju -d kaiju_test']
+      interval: 2s
+      timeout: 3s
+      retries: 30

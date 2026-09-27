@@ -1,0 +1,26 @@
+# Development database. Port 5433 on purpose: it will not collide with a
+# PostgreSQL already installed on the machine, so both can coexist.
+#
+#   npm run db:up      start it
+#   npm run db:down    stop it (data is kept in the named volume)
+services:
+  kaiju-db:
+    image: postgres:16-alpine
+    container_name: kaiju-dev-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kaiju
+      POSTGRES_PASSWORD: kaiju
+      POSTGRES_DB: kaiju
+    ports:
+      - '5433:5432'
+    volumes:
+      - kaiju-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U kaiju -d kaiju']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  kaiju-dev-data:

@@ -1,0 +1,337 @@
+// Kaiju Crisis Manager — database schema
+// Design principle: the *rules* of the domain (topology, permissions, retention)
+// are stored as DATA (TopologyEdge, PermissionRule, Stock.retentionBase), never as
+// hardcoded conditionals. The pure rule engine in src/domain receives them as input.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum Role {
+  QC // Quarter Coordinator  — scoped to a single quarter
+  LC // Logistics Coordinator — multi-quarter, organises transit chains
+  CD // City Director         — city-wide authority
+}
+
+enum LinkType {
+  LAND
+  SEA
+}
+
+enum ActionKey {
+  VIEW_RESOURCES
+  RESERVE_OWN_QUARTER
+  REQUEST_ADJACENT_TRANSFER
+  ORGANIZE_TRANSIT
+  REQUISITION
+  LOWER_RETENTION_THRESHOLD
+}
+
+enum TransferMode {
+  DIRECT // adjacent quarters, one land leg
+  TRANSIT // non-adjacent, routed through intermediate quarter(s)
+  MARITIME // routed through the Tokyork Bay (Echo / Xeno / Zion only)
+}
+
+enum TransferStatus {
+  PENDING_SOURCE_APPROVAL // waiting for the source QC
+  PENDING_TRANSIT_APPROVAL // waiting for an intermediate quarter QC
+  APPROVED
+  IN_TRANSIT
+  DELIVERED
+  REJECTED
+  CANCELLED
+}
+
+enum LegStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  IN_TRANSIT
+  DELIVERED
+}
+
+enum ReservationStatus {
+  ACTIVE
+  RELEASED
+  CANCELLED
+}
+
+enum AuditOutcome {
+  ALLOWED
+  REJECTED
+}
+
+// ---------------------------------------------------------------------------
+// Topology — the city graph, including the Bay as a pseudo-node
+// ---------------------------------------------------------------------------
+
+model District {
+  id           String  @id @default(uuid())
+  code         String  @unique // A, E, W, X, Z
+  name         String // Apex, Echo, Warden, Xeno, Zion
+  hasSeaAccess Boolean @default(false)
+  isHub        Boolean @default(false) // Xeno
+  severity     Int     @default(1) // 1..5 — drives the map colour, NOT the permissions
+
+  stocks               Stock[]
+  users                User[]
+  reservations         Reservation[]
+  outgoingTransfers    Transfer[]          @relation("TransferSource")
+  incomingTransfers    Transfer[]          @relation("TransferDestination")
+  retentionOverrides   RetentionOverride[]
+
+  @@map("districts")
+}
+
+/// One undirected edge of the city graph. Nodes are district codes plus the
+/// literal "SEA" pseudo-node, so that a maritime route is simply a two-leg path
+/// and path-finding stays uniform. Both directions are stored.
+model TopologyEdge {
+  id       String   @id @default(uuid())
+  fromNode String // "A" | "E" | "W" | "X" | "Z" | "SEA"
+  toNode   String
+  type     LinkType
+
+  @@unique([fromNode, toNode])
+  @@map("topology_edges")
+}
+
+// ---------------------------------------------------------------------------
+// Resources & stock
+// ---------------------------------------------------------------------------
+
+model ResourceType {
+  id    String @id @default(uuid())
+  code  String @unique // MEDICAL_PERSONNEL, RESCUE_TEAMS, ...
+  name  String
+  unit  String @default("unit")
+  order Int    @default(0)
+
+  stocks       Stock[]
+  reservations Reservation[]
+  transfers    Transfer[]
+
+  @@map("resource_types")
+}
+
+/// Per (district, resource) stock.
+/// retentionBase is FROZEN at the initial quantity: the minimum is always
+/// ceil(retentionBase * pct), never a percentage of the current quantity.
+model Stock {
+  id                 String @id @default(uuid())
+  districtId         String
+  resourceTypeId     String
+  initialQuantity    Int
+  currentQuantity    Int
+  reservedQuantity   Int    @default(0) // held by active reservations
+  committedOutbound  Int    @default(0) // locked by transfers not yet delivered
+  retentionBase      Int // == initialQuantity, kept explicit for auditability
+
+  district     District     @relation(fields: [districtId], references: [id], onDelete: Cascade)
+  resourceType ResourceType @relation(fields: [resourceTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([districtId, resourceTypeId])
+  @@index([resourceTypeId])
+  @@map("stocks")
+}
+
+// ---------------------------------------------------------------------------
+// City state, catastrophe level, retention overrides
+// ---------------------------------------------------------------------------
+
+/// Single-row table holding the city-wide catastrophe level.
+/// The level is re-read inside every transaction; clients never supply it.
+model CityState {
+  id               String   @id @default("singleton")
+  catastropheLevel Int      @default(1) // 1..5
+  updatedAt        DateTime @updatedAt
+
+  @@map("city_state")
+}
+
+model CatastropheLevelChange {
+  id            String   @id @default(uuid())
+  previousLevel Int
+  newLevel      Int
+  reason        String?
+  changedById   String
+  changedAt     DateTime @default(now())
+
+  changedBy User @relation(fields: [changedById], references: [id])
+
+  @@index([changedAt])
+  @@map("catastrophe_level_changes")
+}
+
+/// An explicit, traceable lowering of the retention threshold.
+/// Only the City Director, only at level 5. districtId null == city-wide.
+model RetentionOverride {
+  id          String    @id @default(uuid())
+  districtId  String?
+  pct         Decimal   @db.Decimal(4, 3) // e.g. 0.150
+  active      Boolean   @default(true)
+  reason      String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  revokedAt   DateTime?
+
+  district  District? @relation(fields: [districtId], references: [id])
+  createdBy User      @relation(fields: [createdById], references: [id])
+
+  @@index([active])
+  @@map("retention_overrides")
+}
+
+// ---------------------------------------------------------------------------
+// Permissions stored as data (levels x roles x actions)
+// ---------------------------------------------------------------------------
+
+model PermissionRule {
+  id     String    @id @default(uuid())
+  action ActionKey
+  level  Int // 1..5
+  role   Role
+
+  @@unique([action, level, role])
+  @@index([level])
+  @@map("permission_rules")
+}
+
+// ---------------------------------------------------------------------------
+// Users
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  role         Role
+  districtId   String? // required for QC, null for LC and CD
+  createdAt    DateTime @default(now())
+
+  district           District?                @relation(fields: [districtId], references: [id])
+  reservations       Reservation[]
+  initiatedTransfers Transfer[]               @relation("TransferInitiator")
+  approvedLegs       TransferLeg[]            @relation("LegApprover")
+  levelChanges       CatastropheLevelChange[]
+  retentionOverrides RetentionOverride[]
+  auditLogs          AuditLog[]
+
+  @@index([districtId])
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Reservations
+// ---------------------------------------------------------------------------
+
+model Reservation {
+  id             String            @id @default(uuid())
+  requesterId    String
+  districtId     String
+  resourceTypeId String
+  quantity       Int
+  startAt        DateTime
+  endAt          DateTime
+  status         ReservationStatus @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+
+  requester    User         @relation(fields: [requesterId], references: [id])
+  district     District     @relation(fields: [districtId], references: [id])
+  resourceType ResourceType @relation(fields: [resourceTypeId], references: [id])
+
+  @@index([districtId, startAt])
+  @@index([status])
+  @@map("reservations")
+}
+
+// ---------------------------------------------------------------------------
+// Transfers
+// ---------------------------------------------------------------------------
+
+model Transfer {
+  id                  String         @id @default(uuid())
+  initiatorId         String
+  sourceDistrictId    String
+  destDistrictId      String
+  resourceTypeId      String
+  quantity            Int
+  mode                TransferMode
+  status              TransferStatus @default(PENDING_SOURCE_APPROVAL)
+  isRequisition       Boolean        @default(false)
+  /// Lower value == processed first. Rule 5: requests merely transiting
+  /// through Xeno are queued behind Xeno's own requests.
+  priority            Int            @default(100)
+  etaHours            Int
+  requestedAt         DateTime       @default(now())
+  departureAt         DateTime?
+  estimatedDeliveryAt DateTime?
+  deliveredAt         DateTime?
+  rejectionCode       String?
+  rejectionReason     String?
+
+  initiator    User          @relation("TransferInitiator", fields: [initiatorId], references: [id])
+  source       District      @relation("TransferSource", fields: [sourceDistrictId], references: [id])
+  destination  District      @relation("TransferDestination", fields: [destDistrictId], references: [id])
+  resourceType ResourceType  @relation(fields: [resourceTypeId], references: [id])
+  legs         TransferLeg[]
+
+  @@index([status, priority])
+  @@index([sourceDistrictId])
+  @@index([destDistrictId])
+  @@map("transfers")
+}
+
+/// One hop of a transfer. A transit chain A -> X -> Z is two legs; each
+/// intermediate quarter approves its own leg.
+model TransferLeg {
+  id               String    @id @default(uuid())
+  transferId       String
+  sequence         Int // 0-based
+  fromNode         String // district code or "SEA"
+  toNode           String
+  linkType         LinkType
+  approvalRequired Boolean   @default(false)
+  status           LegStatus @default(PENDING)
+  approvedById     String?
+  approvedAt       DateTime?
+  etaHours         Int
+
+  transfer   Transfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  approvedBy User?    @relation("LegApprover", fields: [approvedById], references: [id])
+
+  @@unique([transferId, sequence])
+  @@map("transfer_legs")
+}
+
+// ---------------------------------------------------------------------------
+// Audit — every attempt, allowed or rejected, with the violated rule code
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id            String       @id @default(uuid())
+  userId        String?
+  action        String
+  outcome       AuditOutcome
+  violationCode String?
+  httpStatus    Int?
+  context       Json?
+  createdAt     DateTime     @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([createdAt])
+  @@index([violationCode])
+  @@map("audit_logs")
+}
