@@ -1,7 +1,11 @@
 {
   "extends": "./tsconfig.json",
-  // `test` must be excluded, not just the spec files: compiling test/helpers
-  // widens the inferred rootDir to the project root, which pushes the output to
-  // dist/src/main.js and breaks `npm run start:prod` (`node dist/main`).
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
+  // rootDir is declared, not inferred. Inferred, it silently climbs to the
+  // nearest common ancestor of everything compiled — one stray import from
+  // prisma/seed.ts and the output lands in dist/src/main.js while start:prod
+  // still looks for dist/main. Declared, that same mistake fails the build.
+  "compilerOptions": {
+    "rootDir": "./src"
+  },
+  "exclude": ["node_modules", "dist", "test", "prisma", "**/*spec.ts"]
 }
