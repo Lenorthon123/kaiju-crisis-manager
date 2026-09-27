@@ -17,7 +17,7 @@
 ## Livrables du sujet
 - [x] 1. Dépôt Git avec le code complet — https://github.com/Lenorthon123/kaiju-crisis-manager (branche `main`, 130 fichiers)
 - [x] 2. Diagramme entité-relation commité (`docs/erd.md`)
-- [ ] 3. **Application déployée, URL dans le README** — rien de commencé
+- [ ] 3. **Application déployée, URL dans le README** — API en ligne sur Railway, interface à déployer
 - [x] 4. Suite de tests e2e couvrant les parcours critiques
 - [ ] 5. Disclosure IA — squelette prêt, sections `[À COMPLÉTER]` à remplir
 
