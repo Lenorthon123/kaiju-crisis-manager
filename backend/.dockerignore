@@ -1,0 +1,11 @@
+node_modules
+dist
+test
+coverage
+scripts
+docker-compose*.yml
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store

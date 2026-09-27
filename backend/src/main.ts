@@ -6,6 +6,16 @@ import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/errors/all-exceptions.filter';
 import { PrismaService } from './prisma/prisma.service';
 
+// The spec forbids a literal `*` alongside credentials, so `*` becomes "reflect
+// whoever asked". A comma-separated list lets the preview deploys in too.
+function parseCorsOrigin(raw: string): string[] | boolean {
+  if (raw.trim() === '*') return true;
+  return raw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const config = app.get(ConfigService);
@@ -14,7 +24,7 @@ async function bootstrap(): Promise<void> {
   app.use(helmet());
   app.setGlobalPrefix('api');
   app.enableCors({
-    origin: config.get<string>('CORS_ORIGIN', '*'),
+    origin: parseCorsOrigin(config.get<string>('CORS_ORIGIN', '*')),
     credentials: true,
   });
 

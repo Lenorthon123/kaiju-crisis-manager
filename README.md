@@ -5,6 +5,7 @@ Cinq quartiers, dix ressources critiques, cinq niveaux de catastrophe, et un
 serveur qui refuse toute opération contraire aux règles.
 
 - **URL de production** : _à compléter au déploiement_
+- **Procédure de déploiement** : [`docs/deployment.md`](docs/deployment.md)
 - **Diagramme entité-relation** : [`docs/erd.md`](docs/erd.md)
 - **Registre de décisions de conception** : [`docs/decisions.md`](docs/decisions.md)
 - **Topologie de la ville** : [`docs/topology.md`](docs/topology.md)
