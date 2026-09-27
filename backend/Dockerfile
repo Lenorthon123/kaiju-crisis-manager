@@ -18,9 +18,12 @@ COPY prisma ./prisma
 RUN chmod -R a+rX prisma
 RUN npx prisma generate
 
-COPY tsconfig.json tsconfig.build.json nest-cli.json ./
+COPY tsconfig.json tsconfig.build.json tsconfig.seed.json nest-cli.json ./
 COPY src ./src
 RUN npm run build
+# The seed is compiled separately: it sits outside src and would otherwise drag
+# the API's output one directory deeper.
+RUN npx tsc -p tsconfig.seed.json
 
 # ---- runtime ---------------------------------------------------------------
 FROM node:20-bookworm-slim AS runtime
@@ -36,6 +39,7 @@ WORKDIR /app
 # generated client and the platform engine, so the deploy downloads nothing.
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist-seed ./dist-seed
 COPY --from=builder /app/prisma ./prisma
 # --chmod pins the mode at copy time. Never trust the host's: whatever the
 # checkout hands over is root-owned in here, and `node` is about to take over.

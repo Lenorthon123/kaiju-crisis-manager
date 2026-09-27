@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  // The seed lives outside src but imports the domain, so it gets its own build
+  // with the project root as rootDir. Keeping it out of tsconfig.build.json is
+  // what stops it from dragging the API's output into dist/src.
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "./dist-seed",
+    "declaration": false,
+    "sourceMap": false,
+    "incremental": false
+  },
+  "include": ["prisma/seed.ts", "src/domain/**/*.ts"],
+  "exclude": ["node_modules", "dist", "dist-seed", "**/__tests__/**"]
+}

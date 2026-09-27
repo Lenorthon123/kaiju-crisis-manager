@@ -64,17 +64,30 @@ web.
 ## 3. Amorcer les données (une seule fois)
 
 Les migrations sont jouées à chaque démarrage par `docker-entrypoint.sh`
-(`prisma migrate deploy`). Le seed, lui, n'y est pas : il vide toutes les tables
-avant d'écrire, un simple redémarrage effacerait donc les données en pleine
-soutenance. Il se lance à la main, depuis le poste de dev, contre la base de
-production — son URL publique est dans l'onglet **Variables** du service
-Postgres.
+(`prisma migrate deploy`) : elles sont additives et idempotentes. Le seed, lui,
+vide toutes les tables avant d'écrire — le lancer à chaque redémarrage
+effacerait les données en pleine soutenance.
+
+Il est donc **optionnel et gardé deux fois** : il ne s'exécute que si la variable
+`SEED_ON_BOOT` vaut `true`, et il ne fait rien si la base contient déjà des
+quartiers. Laisser la variable en place n'a donc aucune conséquence.
+
+1. Service `kaiju-api` → **Variables** → `SEED_ON_BOOT` = `true`
+2. Le service redéploie et sème. Les logs affichent `> Districts`,
+   `> Topology`, … puis `Seed complete.`
+3. Retirer la variable (facultatif — un second démarrage afficherait seulement
+   `Database already holds 5 districts — seed skipped.`)
+
+Pour choisir le mot de passe de démonstration, ajouter `SEED_PASSWORD` avant
+l'étape 1. Sans elle, c'est `Kaiju!2026`.
+
+**Depuis le poste de dev**, la même chose est possible sans passer par Railway,
+mais elle exige une base joignable de l'extérieur (Postgres → Settings →
+Networking → TCP Proxy) et elle est **destructive**, sans garde :
 
 ```bash
 cd backend
-DATABASE_URL="<connexion publique Postgres de Railway>" \
-SEED_PASSWORD="<mot de passe de démonstration>" \
-npm run prisma:seed
+DATABASE_URL="<DATABASE_PUBLIC_URL>" npm run prisma:seed
 ```
 
 ## Comptes de démonstration
