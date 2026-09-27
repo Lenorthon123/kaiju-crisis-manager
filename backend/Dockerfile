@@ -36,7 +36,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY package.json docker-entrypoint.sh ./
 
-RUN chmod +x docker-entrypoint.sh
+# Absolute mode, never `+x`: the file can arrive as 600, and `+x` would make it
+# 700 — owned by root, unreadable by `node` two lines down.
+RUN chmod 755 docker-entrypoint.sh
 USER node
 
 EXPOSE 3000
