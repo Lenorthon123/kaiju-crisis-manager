@@ -3,6 +3,8 @@
 #
 #   npm run db:up      start it
 #   npm run db:down    stop it (data is kept in the named volume)
+name: kaiju-dev
+
 services:
   kaiju-db:
     image: postgres:16-alpine

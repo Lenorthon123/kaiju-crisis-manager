@@ -1,32 +1,39 @@
 # Kaiju — plan de travail
 
-## Code — terminé
-- [x] Moteur de règles pur, **71 tests unitaires** verts
-- [x] Schéma Prisma, seed des données de l'annexe, diagramme ER
-- [x] API REST complète, guards déclaratifs, filtre d'exception, journal d'audit
-- [x] Verrous pessimistes et relecture du niveau dans la transaction
-- [x] WebSocket : salles par quartier, les 3 événements imposés
-- [x] Réconciliation horaire : expiration des réservations, passage en IN_TRANSIT
-- [x] Frontend : carte tracée du sujet, 3 dashboards, calendrier, inscription,
-      réservations avec libération
-- [x] `npm run build` vérifié avec les vrais types Prisma générés
-- [x] Binaire compilé démarré : graphe de modules Nest résolu
-
-## Bloquant — jamais exécuté
-- [ ] `npm install` (backend : lock obsolète ; frontend : jamais installé)
-- [ ] `.env` : `DATABASE_URL` pointe encore sur 5432, la base Docker est sur 5433
-- [ ] `npx prisma migrate dev --name init` — `prisma/migrations` n'existe pas
-- [ ] `npm run prisma:seed`
-- [ ] **`npm run test:e2e`** — 4 fichiers de specs écrits, aucun exécuté
-- [ ] Premier commit git — le dépôt n'en a aucun
+## Vérifié, qui tourne pour de vrai
+- [x] Moteur de règles pur — **71 tests unitaires**, sans base de données
+- [x] **40 tests e2e** contre un PostgreSQL réel : parcours critiques, concurrence,
+      temps réel, réconciliation horaire
+- [x] Verrous pessimistes prouvés : deux requêtes simultanées sur la dernière
+      unité, rafale de 12 demandes qui s'arrête pile au plancher de rétention
+- [x] `npm run build` + binaire compilé qui démarre
+- [x] Migration `20260927110032_init` appliquée et commitée
+- [x] Seed des données de l'annexe
+- [x] Frontend : build de production, rendu vérifié par captures
+- [x] Dépôt Git initialisé et commité
 
 ## Livrables du sujet
-- [x] 1. Dépôt Git avec le code complet — *code prêt, zéro commit*
-- [x] 2. Diagramme ER commité — *écrit, pas commité*
+- [x] 1. Dépôt Git avec le code complet
+- [x] 2. Diagramme entité-relation commité (`docs/erd.md`)
 - [ ] 3. **Application déployée, URL dans le README** — rien de commencé
-- [x] 4. Suite e2e — *écrite, jamais exécutée*
-- [ ] 5. Disclosure IA — squelette prêt, sections `[À COMPLÉTER]`
+- [x] 4. Suite de tests e2e couvrant les parcours critiques
+- [ ] 5. Disclosure IA — squelette prêt, sections `[À COMPLÉTER]` à remplir
 
-## Ensuite
-- [ ] Tests Playwright de l'interface
-- [ ] Supprimer les dossiers vides `src/users` et `src/common/interceptors`
+## Ce qui reste
+- [ ] Déploiement : API + front + base, URL dans le README
+- [ ] Remplir `docs/ai-disclosure.md` (les parties de jugement personnel)
+- [ ] Optionnel : tests Playwright de l'interface
+- [ ] Optionnel : ESLint (le script avait été retiré, il était cassé)
+
+## Commandes
+
+```bash
+cd backend
+npm run db:up            # PostgreSQL de dev, port 5433
+npm run start:dev        # http://localhost:3000/api/health
+npm test                 # 71 tests unitaires
+npm run test:e2e         # 40 tests e2e, base jetable sur 55432
+
+cd ../frontend
+npm run dev              # http://localhost:5173
+```

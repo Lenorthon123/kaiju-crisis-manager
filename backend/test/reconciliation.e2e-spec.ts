@@ -21,7 +21,7 @@ describe('reconciliation', () => {
   });
 
   afterAll(async () => {
-    await ctx.app.close();
+    await ctx?.app.close();
   });
 
   beforeEach(async () => {

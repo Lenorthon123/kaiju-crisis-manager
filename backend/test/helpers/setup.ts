@@ -8,4 +8,4 @@ if (!process.env.DATABASE_URL) {
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET ??= 'test-secret-value-long-enough';
-process.env.PORT ??= '0';
+// No PORT here: createTestApp() calls app.listen(0) and lets the OS pick.

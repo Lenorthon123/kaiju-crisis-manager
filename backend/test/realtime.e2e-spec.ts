@@ -17,7 +17,7 @@ describe('real-time broadcasting', () => {
 
   afterAll(async () => {
     for (const s of sockets) s.disconnect();
-    await ctx.app.close();
+    await ctx?.app.close();
   });
 
   beforeEach(async () => {
@@ -36,9 +36,15 @@ describe('real-time broadcasting', () => {
     });
     sockets.push(socket);
     return new Promise((resolve, reject) => {
-      socket.on('connect', () => resolve(socket));
-      socket.on('connect_error', reject);
-      setTimeout(() => reject(new Error('socket did not connect in time')), 5000);
+      const timer = setTimeout(() => reject(new Error('socket did not connect in time')), 5000);
+      socket.on('connect', () => {
+        clearTimeout(timer);
+        resolve(socket);
+      });
+      socket.on('connect_error', (err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
     });
   }
 

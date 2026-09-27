@@ -18,7 +18,7 @@ describe('critical user journeys', () => {
   });
 
   afterAll(async () => {
-    await ctx.app.close();
+    await ctx?.app.close();
   });
 
   beforeEach(async () => {

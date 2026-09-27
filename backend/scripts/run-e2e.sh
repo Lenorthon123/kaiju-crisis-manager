@@ -7,10 +7,11 @@ cd "$(dirname "$0")/.."
 export DATABASE_URL="postgresql://kaiju:kaiju@localhost:55432/kaiju_test?schema=public"
 export JWT_SECRET="e2e-secret-value-long-enough"
 export NODE_ENV="test"
-export PORT="0"
 
 cleanup() {
-  docker compose -f docker-compose.test.yml down --remove-orphans >/dev/null 2>&1 || true
+  # Never --remove-orphans here: it would reach outside this stack and delete
+  # containers belonging to other projects on the machine.
+  docker compose -f docker-compose.test.yml down >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 

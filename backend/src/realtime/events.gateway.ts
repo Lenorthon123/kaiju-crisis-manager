@@ -4,10 +4,11 @@ import { JwtService } from '@nestjs/jwt';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   WebSocketGateway,
   WebSocketServer,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Socket } from 'socket.io';
 import { PrismaService } from '../prisma/prisma.service';
 import { DistrictCode } from '../domain';
 import {
@@ -23,6 +24,7 @@ const districtRoom = (code: string) => `district:${code}`;
 
 interface SocketUser {
   id: string;
+  email: string;
   role: 'QC' | 'LC' | 'CD';
   districtCode: DistrictCode | null;
 }
@@ -31,9 +33,11 @@ interface SocketUser {
   namespace: '/realtime',
   cors: { origin: true, credentials: true },
 })
-export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class EventsGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   @WebSocketServer()
-  server!: Server;
+  server!: Namespace;
 
   private readonly logger = new Logger(EventsGateway.name);
 
@@ -43,41 +47,55 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly prisma: PrismaService,
   ) {}
 
-  // The socket is authenticated at handshake and the SERVER picks the rooms.
-  // A QC cannot ask to listen in on a quarter that is none of its business.
+  // Authentication belongs in a handshake middleware, not in handleConnection:
+  // by the time handleConnection runs the namespace has already accepted the
+  // socket, so a bad token would get `connect` and only then be kicked.
+  // Rejecting here makes the client see `connect_error` and nothing else.
+  afterInit(server: Namespace): void {
+    server.use((socket, next) => {
+      void this.authenticate(socket)
+        .then((user) => {
+          socket.data.user = user;
+          next();
+        })
+        .catch(() => next(new Error('UNAUTHENTICATED')));
+    });
+  }
+
+  private async authenticate(client: Socket): Promise<SocketUser> {
+    const token = this.extractToken(client);
+    const payload = this.jwt.verify<{ sub: string }>(token, {
+      secret: this.config.getOrThrow<string>('JWT_SECRET'),
+    });
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.sub },
+      include: { district: true },
+    });
+    if (!user) throw new UnauthorizedException('Account no longer exists.');
+
+    return {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      districtCode: user.district ? (user.district.code as DistrictCode) : null,
+    };
+  }
+
+  // Rooms are decided by the SERVER, never requested by the client: a QC cannot
+  // listen in on a quarter that is none of its business.
   async handleConnection(client: Socket): Promise<void> {
-    try {
-      const token = this.extractToken(client);
-      const payload = this.jwt.verify<{ sub: string }>(token, {
-        secret: this.config.getOrThrow<string>('JWT_SECRET'),
-      });
+    const user = client.data.user as SocketUser;
 
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-        include: { district: true },
-      });
-      if (!user) throw new UnauthorizedException();
-
-      const socketUser: SocketUser = {
-        id: user.id,
-        role: user.role,
-        districtCode: user.district ? (user.district.code as DistrictCode) : null,
-      };
-      client.data.user = socketUser;
-
-      await client.join(CITY_ROOM);
-      if (socketUser.role === 'QC' && socketUser.districtCode) {
-        await client.join(districtRoom(socketUser.districtCode));
-      } else {
-        const districts = await this.prisma.district.findMany({ select: { code: true } });
-        await Promise.all(districts.map((d) => client.join(districtRoom(d.code))));
-      }
-
-      this.logger.log(`Connected ${user.email} (${user.role})`);
-    } catch {
-      client.emit('error', { code: 'UNAUTHENTICATED', message: 'Invalid or missing token.' });
-      client.disconnect(true);
+    await client.join(CITY_ROOM);
+    if (user.role === 'QC' && user.districtCode) {
+      await client.join(districtRoom(user.districtCode));
+    } else {
+      const districts = await this.prisma.district.findMany({ select: { code: true } });
+      await Promise.all(districts.map((d) => client.join(districtRoom(d.code))));
     }
+
+    this.logger.log(`Connected ${user.email} (${user.role})`);
   }
 
   handleDisconnect(client: Socket): void {

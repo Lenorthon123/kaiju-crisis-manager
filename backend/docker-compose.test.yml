@@ -1,5 +1,7 @@
 # Throwaway PostgreSQL for the e2e suite. tmpfs storage: the database lives in
 # RAM and disappears with the container, so no test run can pollute the next.
+name: kaiju-test
+
 services:
   kaiju-test-db:
     image: postgres:16-alpine
