@@ -4,7 +4,8 @@ Plateforme de coordination des secours de Tokyork après une attaque de Kaiju.
 Cinq quartiers, dix ressources critiques, cinq niveaux de catastrophe, et un
 serveur qui refuse toute opération contraire aux règles.
 
-- **URL de production** : API — https://kaiju-crisis-manager-production-7265.up.railway.app (interface : à compléter)
+- **URL de production** : https://disciplined-cat-production-7a58.up.railway.app
+- **API** : https://kaiju-crisis-manager-production-7265.up.railway.app
 - **Procédure de déploiement** : [`docs/deployment.md`](docs/deployment.md)
 - **Diagramme entité-relation** : [`docs/erd.md`](docs/erd.md)
 - **Registre de décisions de conception** : [`docs/decisions.md`](docs/decisions.md)
