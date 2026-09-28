@@ -13,6 +13,26 @@ serveur qui refuse toute opération contraire aux règles.
 - **Routes de l'API et événements WebSocket** : [`docs/api.md`](docs/api.md)
 - **Usage de l'IA** : [`docs/ai-disclosure.md`](docs/ai-disclosure.md)
 
+### Comptes de démonstration
+
+Mot de passe : `Kaiju!2026`
+
+| Rôle | Identifiant |
+|---|---|
+| Quarter Coordinator | `qc.apex@tokyork.gov`, `qc.echo@tokyork.gov`, `qc.warden@tokyork.gov`, `qc.xeno@tokyork.gov`, `qc.zion@tokyork.gov` |
+| Logistics Coordinator | `lc@tokyork.gov` |
+| City Director | `cd@tokyork.gov` |
+
+### Où trouver chaque livrable
+
+| Livrable | Emplacement |
+|---|---|
+| Code complet (front, back, migrations) | ce dépôt — `frontend/`, `backend/`, `backend/prisma/migrations/` |
+| Diagramme entité-relation | [`docs/erd.md`](docs/erd.md) |
+| Application déployée | https://disciplined-cat-production-7a58.up.railway.app |
+| Suite de tests end-to-end | [`backend/test/`](backend/test) — `npm run test:e2e` |
+| Disclosure de l'usage de l'IA | [`docs/ai-disclosure.md`](docs/ai-disclosure.md) |
+
 ## Architecture
 
 ```
