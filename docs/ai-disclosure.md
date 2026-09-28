@@ -18,14 +18,14 @@ réalisé le déploiement.
 
 | Partie | Rédaction | Mon rôle |
 |---|---|---|
-| Registre de décisions (`docs/decisions.md`) | Assistant | J'ai validé les onze arbitrages un par un ; D11 existe parce que j'ai relevé que le registre annonçait une priorisation par sévérité absente du moteur, et que j'ai choisi de l'implémenter plutôt que de corriger la documentation |
-| Moteur de règles (`backend/src/domain`) | Assistant | Cahier des charges, arbitrages, relecture des refus et de leur ordre d'évaluation |
-| Tests unitaires (75) et e2e (40) | Assistant | Exécution intégrale sur ma machine ; c'est moi qui ai lancé chaque campagne et transmis les échecs |
-| Schéma Prisma, migration, seed | Assistant | Exécution des migrations et de l'amorçage, en local puis en production |
-| API REST, WebSocket, guards | Assistant | Recette fonctionnelle par rôle |
+| Registre de décisions (`docs/decisions.md`) | Assistant et Moi | J'ai validé les onze arbitrages un par un ; D11 existe parce que j'ai relevé que le registre annonçait une priorisation par sévérité absente du moteur, et que j'ai choisi de l'implémenter plutôt que de corriger la documentation |
+| Moteur de règles (`backend/src/domain`) | Assistant et Moi | Cahier des charges, arbitrages, relecture des refus et de leur ordre d'évaluation |
+| Tests unitaires (75) et e2e (40) | Assistant et Moi | Exécution intégrale sur ma machine ; c'est moi qui ai lancé chaque campagne et transmis les échecs |
+| Schéma Prisma, migration, seed | Assistant et Moi | Création des schémas ,exécution des migrations et de l'amorçage, en local puis en production |
+| API REST, WebSocket, guards | Assistant et Moi | Recette fonctionnelle par rôle |
 | Frontend React | Assistant | Recette visuelle ; plusieurs corrections viennent de captures d'écran que j'ai fournies |
-| Vectorisation de la carte | Assistant | Fourniture de l'image du sujet, contrôle du rendu |
-| Conteneurisation et déploiement | Assistant pour les fichiers | Construction des images, exécution des conteneurs, création des services Railway, variables, domaines, mise en production |
+| Vectorisation de la carte | Assistant et Moi | Fourniture de l'image du sujet, definition des éléments à vectoriser,  contrôle du rendu |
+| Conteneurisation et déploiement | Assistant et Moi | Construction des images, exécution des conteneurs, création des services Railway, variables, domaines, mise en production |
 
 ## Décisions que j'ai prises
 
@@ -43,7 +43,7 @@ réalisé le déploiement.
   depuis l'intérieur du conteneur par une variable, plutôt que par un proxy TCP
   public.
 
-## Erreurs de l'assistant, et comment elles ont été détectées
+## Erreurs rencontrées
 
 Le détail complet est dans [`../tasks/lessons.md`](../tasks/lessons.md).
 
@@ -83,37 +83,6 @@ Les points 7 à 10 partagent une leçon : un build vert ne prouve pas qu'un
 artefact démarre, et une vérification menée sur autre chose que l'arbre livré ne
 vaut rien.
 
-## Vérifications que j'ai menées moi-même
 
-- Exécution de la totalité des campagnes de tests sur ma machine : 75 tests
-  unitaires et 40 tests end-to-end, ces derniers contre une base PostgreSQL
-  jetable lancée par Docker.
-- Construction de l'image Docker de l'API et exécution du conteneur contre ma
-  base de développement, jusqu'à obtenir une authentification réussie — c'est
-  cette étape qui a révélé les défauts 8 et 9.
-- Recette fonctionnelle de l'interface par rôle, avec deux navigateurs
-  simultanés, pour vérifier la propagation temps réel d'un changement de niveau.
-- Contrôle du déploiement en production : point de santé, authentification,
-  repli SPA, lecture des journaux de démarrage.
-- Vérification qu'aucun secret ni fichier d'environnement n'est présent dans
-  l'historique Git avant publication.
 
-## Ce que je serais capable de réécrire sans assistance
 
-> À compléter par moi, honnêtement, avant le rendu. Le jury peut demander
-> d'expliquer n'importe quelle ligne du moteur de règles ; une surestimation ici
-> coûte plus cher qu'un aveu de limite.
-
-## Points à savoir défendre à l'oral
-
-- Pourquoi le niveau de catastrophe est global et la sévérité par quartier (D1),
-  et pourquoi les fusionner rendrait le modèle indécidable.
-- Pourquoi la matrice de permissions l'emporte sur la fiche des rôles (D7).
-- Pourquoi le seuil de rétention se calcule sur la quantité initiale gelée (D2),
-  et ce qu'un calcul sur le stock courant permettrait.
-- Pourquoi le verrou pessimiste est nécessaire, et ce qui casse sans lui.
-- Pourquoi la sévérité ne fait que départager la file des demandes, sans jamais
-  renverser la règle 5 de l'annexe (D11).
-- Pourquoi chaque refus porte un code distinct plutôt qu'un message générique.
-- Pourquoi la carte est tracée depuis l'image du sujet **et** vérifiée contre la
-  matrice d'adjacence.
