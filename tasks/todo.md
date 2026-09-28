@@ -27,15 +27,4 @@
 - [x] Déploiement : API + front + base sur Railway, URLs dans le README
 
 
-## Commandes
 
-```bash
-cd backend
-npm run db:up            # PostgreSQL de dev, port 5433
-npm run start:dev        # http://localhost:3000/api/health
-npm test                 # 71 tests unitaires
-npm run test:e2e         # 40 tests e2e, base jetable sur 55432
-
-cd ../frontend
-npm run dev              # http://localhost:5173
-```
