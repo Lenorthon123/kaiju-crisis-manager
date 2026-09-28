@@ -25,9 +25,7 @@
 - [x] D11 : la sévérité départage la file des demandes (moteur + tests + registre)
 - [x] Image Docker de l'API : construite, démarrée, migrations jouées, login 200 avec JWT
 - [x] Déploiement : API + front + base sur Railway, URLs dans le README
-- [ ] `docs/ai-disclosure.md` : compléter la seule section de jugement personnel
-- [ ] Optionnel : tests Playwright de l'interface
-- [ ] Optionnel : ESLint (le script avait été retiré, il était cassé)
+
 
 ## Commandes
 
